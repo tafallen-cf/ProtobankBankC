@@ -1,0 +1,171 @@
+# ProtobankBankC .gitignore
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Secrets and sensitive data
+secrets/
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.bak
+.project
+.settings/
+.classpath
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/vendor/
+/bin/
+/pkg/
+go.work
+.air.toml
+
+# Node.js / React Native / Web
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+/build/
+/dist/
+/.next/
+/out/
+*.tsbuildinfo
+
+# Testing
+/coverage/
+/.nyc_output/
+*.lcov
+.jest-cache/
+
+# React Native
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+*.orig.*
+/android/app/build/
+/android/app/release/
+/android/build/
+/android/.gradle/
+/android/local.properties
+/ios/Pods/
+/ios/build/
+/ios/*.xcworkspace
+/ios/*.xcuserstate
+/ios/Podfile.lock
+
+# Expo
+.expo/
+.expo-shared/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+/data/
+/pgdata/
+/postgres-data/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+.cache/
+
+# Backups
+*.backup
+*.bak
+*.old
+
+# Generated documentation
+/docs/generated/
+/api-docs/
+
+# SSL certificates (dev only, not production)
+/ssl/dev/*.key
+/ssl/dev/*.crt
+
+# Monitoring and profiling
+*.pprof
+*.prof
+*.trace
+
+# Migration state (keep migrations, ignore state)
+/migrations/*.lock
+
+# Build artifacts
+*.tar.gz
+*.zip
+*.rar
+
+# MacOS
+.AppleDouble
+.LSOverride
+Icon
+
+# Windows
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.nfs*
