@@ -1,0 +1,69 @@
+# Multi-stage Dockerfile for Go microservices
+# Optimized for security and small image size
+
+# =============================================================================
+# Stage 1: Build
+# =============================================================================
+FROM golang:1.21-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git make gcc musl-dev
+
+# Set working directory
+WORKDIR /build
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download && go mod verify
+
+# Copy source code
+COPY . .
+
+# Build the application
+# CGO_ENABLED=0 creates a statically linked binary
+# -ldflags="-w -s" strips debug information for smaller binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s -X main.Version=${VERSION:-dev} -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    -a -installsuffix cgo \
+    -o app \
+    ./cmd/server
+
+# =============================================================================
+# Stage 2: Runtime
+# =============================================================================
+FROM alpine:3.19
+
+# Install CA certificates for HTTPS and timezone data
+RUN apk --no-cache add ca-certificates tzdata
+
+# Create non-root user
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /build/app .
+
+# Copy any additional files (migrations, config, etc.)
+# COPY --from=builder /build/migrations ./migrations
+
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port (will be overridden by environment variable)
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ["/app/app", "healthcheck"] || exit 1
+
+# Run the application
+ENTRYPOINT ["/app/app"]
+CMD ["serve"]

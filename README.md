@@ -47,6 +47,34 @@ ProtobankBankC is a complete banking solution that includes account management, 
 - **Payment Reminders** - Upcoming standing orders and scheduled payments
 - **Multi-channel** - Push notifications, email, and SMS
 
+## Quick Start
+
+### Get Started in 5 Minutes
+
+```bash
+# 1. Clone and setup
+git clone <repository-url>
+cd ProtobankBankC
+make setup
+
+# 2. Start all services
+make up
+
+# 3. View logs
+make logs
+```
+
+**📖 For detailed setup instructions, see [DEVELOPMENT_SETUP.md](./DEVELOPMENT_SETUP.md)**
+
+### Service URLs
+
+Once running, access services at:
+- **Auth API**: http://localhost:3001
+- **Account API**: http://localhost:3003
+- **Transaction API**: http://localhost:3004
+- **RabbitMQ Management**: http://localhost:15672 (admin/admin)
+- **PostgreSQL**: localhost:5432 (postgres/postgres)
+
 ## Technology Stack
 
 ### Database

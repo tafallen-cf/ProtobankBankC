@@ -1,0 +1,417 @@
+version: '3.9'
+
+# ProtobankBankC - Development Environment
+# Complete local development setup with all microservices and infrastructure
+
+services:
+  # =============================================================================
+  # DATABASE SERVICES
+  # =============================================================================
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: protobank-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-protobank}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/02-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-protobank}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # PostgreSQL connection pooler
+  pgbouncer:
+    image: edoburu/pgbouncer:1.21-alpine
+    container_name: protobank-pgbouncer
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-protobank}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 25
+    ports:
+      - "${PGBOUNCER_PORT:-6432}:5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # Redis cache and session store
+  redis:
+    image: redis:7-alpine
+    container_name: protobank-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis} --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # MESSAGE QUEUE
+  # =============================================================================
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: protobank-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-protobank}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"      # AMQP port
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # BACKEND MICROSERVICES (Go)
+  # =============================================================================
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    container_name: protobank-auth-service
+    environment:
+      SERVICE_NAME: auth-service
+      SERVICE_PORT: 3001
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis}@redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      JWT_EXPIRY: 15m
+      REFRESH_TOKEN_EXPIRY: 7d
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - protobank-network
+    restart: unless-stopped
+    # Uncomment for live reload during development
+    # volumes:
+    #   - ./backend/auth-service:/app
+    # command: air
+
+  # User Service
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: protobank-user-service
+    environment:
+      SERVICE_NAME: user-service
+      SERVICE_PORT: 3002
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      AUTH_SERVICE_URL: http://auth-service:3001
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # Account Service
+  account-service:
+    build:
+      context: ./backend/account-service
+      dockerfile: Dockerfile
+    container_name: protobank-account-service
+    environment:
+      SERVICE_NAME: account-service
+      SERVICE_PORT: 3003
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis}@redis:6379/1
+      AUTH_SERVICE_URL: http://auth-service:3001
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # Transaction Service
+  transaction-service:
+    build:
+      context: ./backend/transaction-service
+      dockerfile: Dockerfile
+    container_name: protobank-transaction-service
+    environment:
+      SERVICE_NAME: transaction-service
+      SERVICE_PORT: 3004
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis}@redis:6379/2
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin}@rabbitmq:5672/${RABBITMQ_VHOST:-protobank}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      ACCOUNT_SERVICE_URL: http://account-service:3003
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      account-service:
+        condition: service_started
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # Card Service
+  card-service:
+    build:
+      context: ./backend/card-service
+      dockerfile: Dockerfile
+    container_name: protobank-card-service
+    environment:
+      SERVICE_NAME: card-service
+      SERVICE_PORT: 3005
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      AUTH_SERVICE_URL: http://auth-service:3001
+      ACCOUNT_SERVICE_URL: http://account-service:3003
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-this-32-byte-key-in-prod}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3005:3005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      account-service:
+        condition: service_started
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./backend/payment-service
+      dockerfile: Dockerfile
+    container_name: protobank-payment-service
+    environment:
+      SERVICE_NAME: payment-service
+      SERVICE_PORT: 3006
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin}@rabbitmq:5672/${RABBITMQ_VHOST:-protobank}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      ACCOUNT_SERVICE_URL: http://account-service:3003
+      TRANSACTION_SERVICE_URL: http://transaction-service:3004
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3006:3006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      account-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./backend/notification-service
+      dockerfile: Dockerfile
+    container_name: protobank-notification-service
+    environment:
+      SERVICE_NAME: notification-service
+      SERVICE_PORT: 3007
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin}@rabbitmq:5672/${RABBITMQ_VHOST:-protobank}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      # Email/SMS configuration (optional for dev)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3007:3007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: ./backend/analytics-service
+      dockerfile: Dockerfile
+    container_name: protobank-analytics-service
+    environment:
+      SERVICE_NAME: analytics-service
+      SERVICE_PORT: 3008
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@pgbouncer:5432/${POSTGRES_DB:-protobank}?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis}@redis:6379/3
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-admin}@rabbitmq:5672/${RABBITMQ_VHOST:-protobank}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    ports:
+      - "3008:3008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - protobank-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # API GATEWAY (Optional - can use Nginx or Kong)
+  # =============================================================================
+
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: protobank-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - auth-service
+  #     - user-service
+  #     - account-service
+  #     - transaction-service
+  #     - card-service
+  #     - payment-service
+  #     - notification-service
+  #     - analytics-service
+  #   networks:
+  #     - protobank-network
+  #   restart: unless-stopped
+
+  # =============================================================================
+  # MONITORING & OBSERVABILITY (Optional for development)
+  # =============================================================================
+
+  # Uncomment these services if you need monitoring in development
+
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: protobank-prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - protobank-network
+  #   restart: unless-stopped
+
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: protobank-grafana
+  #   environment:
+  #     GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - protobank-network
+  #   restart: unless-stopped
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+
+networks:
+  protobank-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  # prometheus_data:
+  #   driver: local
+  # grafana_data:
+  #   driver: local
