@@ -92,7 +92,7 @@ jobs:
         echo "✅ Coverage $COVERAGE% meets 80% threshold"
 
     - name: Upload coverage artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: coverage-report
         path: ./backend/auth-service/coverage.html
@@ -173,7 +173,7 @@ jobs:
           ./cmd/server
 
     - name: Upload build artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: auth-service-binary
         path: ./backend/auth-service/auth-service
