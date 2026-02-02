@@ -78,10 +78,57 @@ Automated workflows for continuous integration, security scanning, and deploymen
 
 **Languages**: Go
 
+**Requirements**:
+- **Private repositories**: Requires GitHub Advanced Security (Enterprise/paid plan)
+- **Public repositories**: Available for free
+- **Alternative**: Use local security scanning script (`scripts/security-scan.sh`)
+
+See [SECURITY.md](../../SECURITY.md) for detailed setup instructions.
+
 **Status Badge**:
 ```markdown
 ![CodeQL](https://github.com/tafallen-cf/ProtobankBankC/workflows/CodeQL/badge.svg)
 ```
+
+## Code Scanning
+
+### GitHub Code Scanning (CodeQL)
+
+**Status**: Configured but requires GitHub Advanced Security for private repositories.
+
+**Current Setup**:
+- ✅ CodeQL workflow configured (`.github/workflows/codeql.yml`)
+- ✅ CodeQL config file (`.github/codeql/codeql-config.yml`)
+- ✅ Security-extended queries enabled
+- ⏳ Requires Advanced Security subscription to run
+
+**Options**:
+1. **Enable Advanced Security**: Available for Enterprise/paid GitHub plans
+2. **Make repository public**: Enables free CodeQL scanning
+3. **Use local scanning**: Run `make security-scan` for local security analysis
+
+### Local Security Scanning
+
+**Script**: `scripts/security-scan.sh`
+
+**Includes**:
+- gosec - Static security analysis
+- govulncheck - Go vulnerability database
+- staticcheck - Advanced static analysis
+- Secret detection - Prevent credential leaks
+- Dependency audit - Outdated package check
+
+**Usage**:
+```bash
+# Run all security scans
+make security-scan
+
+# Or run directly
+cd backend/auth-service
+../../scripts/security-scan.sh
+```
+
+See [SECURITY.md](../../SECURITY.md) for complete security documentation.
 
 ## Dependabot
 

@@ -161,15 +161,42 @@ db-restore: ## Restore database from backup.sql
 
 test: ## Run all tests
 	@echo "🧪 Running tests..."
-	@echo "⚠️  Tests not yet implemented"
+	@cd backend/auth-service && go test -v -race ./...
 
 test-unit: ## Run unit tests
 	@echo "🧪 Running unit tests..."
-	@echo "⚠️  Unit tests not yet implemented"
+	@cd backend/auth-service && go test -v -short ./...
 
 test-integration: ## Run integration tests
 	@echo "🧪 Running integration tests..."
-	@echo "⚠️  Integration tests not yet implemented"
+	@cd backend/auth-service && go test -v -tags=integration ./tests/integration/...
+
+test-coverage: ## Run tests with coverage
+	@echo "📊 Running tests with coverage..."
+	@cd backend/auth-service && go test -race -coverprofile=coverage.out -covermode=atomic ./...
+	@cd backend/auth-service && go tool cover -html=coverage.out -o coverage.html
+	@echo "✅ Coverage report generated: backend/auth-service/coverage.html"
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+
+security-scan: ## Run security scans
+	@echo "🔒 Running security scans..."
+	@cd backend/auth-service && ../../scripts/security-scan.sh
+
+lint: ## Run linter
+	@echo "🔍 Running linter..."
+	@cd backend/auth-service && golangci-lint run --timeout=5m
+
+fmt: ## Format code
+	@echo "✨ Formatting code..."
+	@cd backend/auth-service && go fmt ./...
+	@cd backend/auth-service && goimports -w .
+
+vet: ## Run go vet
+	@echo "🔍 Running go vet..."
+	@cd backend/auth-service && go vet ./...
 
 # =============================================================================
 # CLEANUP
