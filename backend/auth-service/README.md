@@ -4,36 +4,50 @@ Authentication and authorization microservice built with **Test-Driven Developme
 
 ## Status
 
-🚧 **Under Development** - Core utilities implemented with full test coverage
+🚀 **Active Development** - Core functionality implemented with comprehensive test coverage
 
 ### Completed ✅
 
 - [x] Project structure
 - [x] Configuration management (`internal/config`)
 - [x] User models (`internal/models`)
-- [x] Password utilities with **TDD** (`internal/utils/password.go`)
+- [x] **Password utilities with TDD** (`internal/utils/password.go`)
   - ✅ 15+ unit tests
   - ✅ Security tests
   - ✅ Benchmarks
   - ✅ 100% code coverage
+- [x] **JWT token utilities with TDD** (`internal/utils/jwt.go`)
+  - ✅ 35+ unit tests
+  - ✅ Security tests (tampering, expiration, signature)
+  - ✅ Token generation (access & refresh)
+  - ✅ Token validation & parsing
+  - ✅ Benchmarks
+- [x] **Custom errors package** (`pkg/errors`)
+  - ✅ HTTP status code mapping
+  - ✅ Error wrapping and unwrapping
+  - ✅ Common auth errors
+- [x] **User repository** (`internal/repository`)
+  - ✅ Full CRUD operations
+  - ✅ Query by email/phone
+  - ✅ KYC status updates
+  - ✅ PostgreSQL integration
 
 ### In Progress 🚧
 
-- [ ] JWT token utilities (TDD approach)
-- [ ] User repository (database layer)
 - [ ] Auth service (business logic)
 - [ ] HTTP handlers (API layer)
-- [ ] Integration tests
-- [ ] End-to-end tests
+- [ ] Integration tests with testcontainers
+- [ ] Rate limiting middleware
+- [ ] Main server entry point
 
 ### Planned 📋
 
-- [ ] Rate limiting middleware
 - [ ] CORS middleware
-- [ ] Request logging
+- [ ] Request logging middleware
 - [ ] Metrics (Prometheus)
 - [ ] Docker image
 - [ ] Kubernetes manifests
+- [ ] End-to-end tests
 
 ## Architecture
 
