@@ -25,7 +25,7 @@ const version = "1.0.0"
 
 func main() {
 	// Load configuration
-	cfg, err := config.LoadConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -35,10 +35,8 @@ func main() {
 		log.Fatalf("Invalid configuration: %v", err)
 	}
 
-	// Set Gin mode
-	if cfg.Environment == "production" {
-		gin.SetMode(gin.ReleaseMode)
-	}
+	// Set Gin mode to release if not in development
+	gin.SetMode(gin.ReleaseMode)
 
 	// Initialize database connection
 	dbPool, err := initDatabase(cfg)
@@ -54,8 +52,8 @@ func main() {
 	authService := services.NewAuthService(
 		userRepo,
 		cfg.JWTSecret,
-		cfg.AccessTokenDuration,
-		cfg.RefreshTokenDuration,
+		cfg.JWTExpiry,
+		cfg.RefreshTokenExpiry,
 	)
 
 	// Initialize handlers
@@ -63,14 +61,14 @@ func main() {
 	healthHandler := handlers.NewHealthHandler(version)
 
 	// Initialize logger
-	logger := middleware.NewLogger(cfg.Environment)
+	logger := middleware.NewLogger("production")
 
 	// Setup router
 	router := setupRouter(cfg, authHandler, healthHandler, logger)
 
 	// Create server
 	server := &http.Server{
-		Addr:           fmt.Sprintf(":%d", cfg.ServerPort),
+		Addr:           ":" + cfg.ServicePort,
 		Handler:        router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -80,7 +78,7 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		log.Printf("Starting Auth Service v%s on port %d (environment: %s)", version, cfg.ServerPort, cfg.Environment)
+		log.Printf("Starting Auth Service v%s on port %s", version, cfg.ServicePort)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}
@@ -109,19 +107,8 @@ func initDatabase(cfg *config.Config) (*pgxpool.Pool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Build connection string
-	connString := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DBHost,
-		cfg.DBPort,
-		cfg.DBUser,
-		cfg.DBPassword,
-		cfg.DBName,
-		cfg.DBSSLMode,
-	)
-
-	// Parse config
-	poolConfig, err := pgxpool.ParseConfig(connString)
+	// Parse config using the DATABASE_URL
+	poolConfig, err := pgxpool.ParseConfig(cfg.DatabaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse database config: %w", err)
 	}
@@ -162,16 +149,10 @@ func setupRouter(cfg *config.Config, authHandler *handlers.AuthHandler, healthHa
 	router.Use(middleware.Metrics())
 
 	// CORS middleware
-	var corsConfig *middleware.CORSConfig
-	if cfg.Environment == "production" {
-		// In production, specify allowed origins
-		corsConfig = middleware.ProductionCORSConfig([]string{
-			"https://yourdomain.com",
-			"https://app.yourdomain.com",
-		})
-	} else {
-		// Development: allow all origins
-		corsConfig = middleware.DefaultCORSConfig()
+	corsConfig := middleware.DefaultCORSConfig()
+	if len(cfg.CORSOrigins) > 0 {
+		// Use configured CORS origins
+		corsConfig = middleware.ProductionCORSConfig(cfg.CORSOrigins)
 	}
 	router.Use(middleware.CORS(corsConfig))
 

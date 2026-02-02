@@ -441,9 +441,7 @@ func TestRefreshToken(t *testing.T) {
 			// For successful test, generate a real refresh token
 			if !tt.wantErr && tt.name == "successful token refresh" {
 				// We need to get the user ID from the mock
-				var userID uuid.UUID
 				mockRepo.On("GetByID", mock.Anything, mock.AnythingOfType("uuid.UUID")).Return(func(_ context.Context, id uuid.UUID) *models.User {
-					userID = id
 					return &models.User{
 						ID:       id,
 						Email:    "john.doe@example.com",

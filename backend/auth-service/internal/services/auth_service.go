@@ -140,7 +140,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 	}
 
 	// Verify password
-	if err := utils.ComparePassword(user.PasswordHash, password); err != nil {
+	if err := utils.ComparePasswords(user.PasswordHash, password); err != nil {
 		return nil, appErrors.NewUnauthorized("invalid email or password")
 	}
 
@@ -181,7 +181,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*m
 	}
 
 	// Verify it's a refresh token
-	if claims.Type != "refresh" {
+	if claims.TokenType != "refresh" {
 		return nil, appErrors.NewUnauthorized("invalid token type")
 	}
 
@@ -229,7 +229,7 @@ func (s *AuthService) ValidateAccessToken(ctx context.Context, accessToken strin
 	}
 
 	// Verify it's an access token
-	if claims.Type != "access" {
+	if claims.TokenType != "access" {
 		return nil, appErrors.NewUnauthorized("invalid token type")
 	}
 
