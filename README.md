@@ -1,6 +1,20 @@
 # ProtobankBankC - Monzo Clone Banking Application
 
+![CI](https://github.com/tafallen-cf/ProtobankBankC/workflows/CI/badge.svg)
+![Docker Build](https://github.com/tafallen-cf/ProtobankBankC/workflows/Docker%20Build/badge.svg)
+![CodeQL](https://github.com/tafallen-cf/ProtobankBankC/workflows/CodeQL/badge.svg)
+![Go Version](https://img.shields.io/badge/Go-1.21-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 A full-featured digital banking application inspired by Monzo, built with modern microservices architecture and comprehensive financial management features.
+
+## Project Status
+
+✅ **Phase 1 Complete**: Auth Service (100%) with full CI/CD pipeline
+- Comprehensive test coverage (80%+)
+- Production-ready deployment (Docker + Kubernetes)
+- Automated security scanning
+- Continuous integration with GitHub Actions
 
 ## Overview
 

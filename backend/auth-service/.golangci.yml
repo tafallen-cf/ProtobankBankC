@@ -1,0 +1,115 @@
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - bodyclose
+    - dogsled
+    - dupl
+    - errcheck
+    - exportloopref
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - gomnd
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - nolintlint
+    - revive
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    check-shadowing: true
+    enable-all: true
+
+  gocyclo:
+    min-complexity: 15
+
+  dupl:
+    threshold: 100
+
+  funlen:
+    lines: 100
+    statements: 50
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  misspell:
+    locale: US
+
+  goimports:
+    local-prefixes: github.com/protobankbankc/auth-service
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+      - name: var-naming
+        severity: warning
+        disabled: false
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - funlen
+
+    # Exclude known linters from partially hard-vendored code
+    - path: internal/hmac/
+      linters:
+        - gosec
+        - gocritic
+
+    # Exclude shadow checking on err variable
+    - linters:
+        - govet
+      text: 'shadow: declaration of "err"'
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true

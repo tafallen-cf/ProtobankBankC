@@ -1,0 +1,51 @@
+version: 2
+updates:
+  # Go dependencies for Auth Service
+  - package-ecosystem: "gomod"
+    directory: "/backend/auth-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "tafallen-cf"
+    labels:
+      - "dependencies"
+      - "go"
+      - "auth-service"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tafallen-cf"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/backend/auth-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tafallen-cf"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"
