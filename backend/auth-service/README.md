@@ -40,9 +40,14 @@ Authentication and authorization microservice built with **Test-Driven Developme
   - ✅ Age verification (18+)
   - ✅ Common password blocking
   - ✅ Comprehensive test suite (50+ tests)
+- [x] **HTTP handlers** (`internal/handlers`)
+  - ✅ Auth handler (register, login, refresh, me, logout)
+  - ✅ Health handler (health, ready, live)
+  - ✅ Error handling with proper HTTP status codes
+  - ✅ Request validation
+  - ✅ 100+ test cases
 
 ### In Progress 🚧
-- [ ] HTTP handlers (API layer)
 - [ ] Integration tests with testcontainers
 - [ ] Rate limiting middleware
 - [ ] Main server entry point
@@ -67,8 +72,10 @@ auth-service/
 │   ├── config/
 │   │   └── config.go            # ✅ Configuration management
 │   ├── handlers/
-│   │   ├── auth_handler.go      # 🚧 HTTP handlers
-│   │   └── health_handler.go
+│   │   ├── auth_handler.go      # ✅ HTTP handlers
+│   │   ├── auth_handler_test.go # ✅ 100+ tests
+│   │   ├── health_handler.go    # ✅ Health/ready/live
+│   │   └── health_handler_test.go
 │   ├── middleware/
 │   │   ├── auth.go              # 🚧 JWT validation middleware
 │   │   ├── cors.go              # 🚧 CORS middleware
