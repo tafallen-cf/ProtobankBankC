@@ -1,8 +1,8 @@
 # Project Backlog - Protobank Banking Application
 
-**Last Updated**: February 2, 2026 09:45 AM GMT
+**Last Updated**: February 2, 2026 10:00 AM GMT
 **Current Sprint**: Auth Service Implementation
-**Overall Progress**: ~18% complete
+**Overall Progress**: ~22% complete
 
 ## Legend
 
@@ -17,7 +17,7 @@
 ## Phase 1: Core Authentication & Infrastructure (Current Sprint)
 
 ### 1.1 Auth Service
-**Priority**: Critical | **Status**: 🚧 In Progress (85% complete)
+**Priority**: Critical | **Status**: 🚧 In Progress (90% complete)
 
 - [x] ✅ Database schema design
 - [x] ✅ Docker Compose setup
@@ -30,11 +30,11 @@
 - [x] ✅ Auth service business logic with comprehensive tests
 - [x] ✅ HTTP handlers with tests (register, login, refresh, logout, health, me)
 - [x] ✅ Main server entry point with graceful shutdown
+- [x] ✅ Rate limiting middleware with tests (token bucket, per-IP)
+- [x] ✅ CORS middleware configuration (production & development)
+- [x] ✅ Request logging middleware (structured logging with logrus)
+- [x] ✅ Prometheus metrics endpoints (/metrics)
 - [ ] 📋 Integration tests with testcontainers
-- [ ] 📋 Rate limiting middleware
-- [ ] 📋 CORS middleware configuration
-- [ ] 📋 Request logging middleware
-- [ ] 📋 Prometheus metrics endpoints
 - [ ] 📋 OpenAPI/Swagger documentation
 - [ ] 📋 Docker image creation
 - [ ] 📋 Kubernetes manifests

@@ -52,17 +52,17 @@ Authentication and authorization microservice built with **Test-Driven Developme
   - ✅ Router setup with all routes
   - ✅ Graceful shutdown (30s timeout)
   - ✅ Production-ready timeouts
-  - ✅ Basic CORS middleware
+- [x] **Production middleware stack** (`internal/middleware`)
+  - ✅ Rate limiting (10 req/min per IP, token bucket algorithm)
+  - ✅ Enhanced CORS (prod/dev configs, proper preflight)
+  - ✅ Structured logging (logrus with JSON output)
+  - ✅ Prometheus metrics (request counts, latency, size)
+  - ✅ 200+ middleware test cases
 
 ### In Progress 🚧
 - [ ] Integration tests with testcontainers
-- [ ] Rate limiting middleware
 
 ### Planned 📋
-
-- [ ] CORS middleware
-- [ ] Request logging middleware
-- [ ] Metrics (Prometheus)
 - [ ] Docker image
 - [ ] Kubernetes manifests
 - [ ] End-to-end tests
@@ -83,9 +83,11 @@ auth-service/
 │   │   ├── health_handler.go    # ✅ Health/ready/live
 │   │   └── health_handler_test.go
 │   ├── middleware/
-│   │   ├── auth.go              # 🚧 JWT validation middleware
-│   │   ├── cors.go              # 🚧 CORS middleware
-│   │   └── rate_limit.go        # 🚧 Rate limiting
+│   │   ├── cors.go              # ✅ CORS middleware
+│   │   ├── logger.go            # ✅ Structured logging
+│   │   ├── metrics.go           # ✅ Prometheus metrics
+│   │   ├── rate_limit.go        # ✅ Rate limiting
+│   │   └── rate_limit_test.go   # ✅ 200+ tests
 │   ├── models/
 │   │   └── user.go              # ✅ User models and DTOs
 │   ├── repository/
