@@ -12,10 +12,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/protobankbankc/auth-service/internal/config"
 	"github.com/protobankbankc/auth-service/internal/handlers"
+	"github.com/protobankbankc/auth-service/internal/middleware"
 	"github.com/protobankbankc/auth-service/internal/repository"
 	"github.com/protobankbankc/auth-service/internal/services"
+	"github.com/sirupsen/logrus"
 )
 
 const version = "1.0.0"
@@ -59,8 +62,11 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService)
 	healthHandler := handlers.NewHealthHandler(version)
 
+	// Initialize logger
+	logger := middleware.NewLogger(cfg.Environment)
+
 	// Setup router
-	router := setupRouter(authHandler, healthHandler)
+	router := setupRouter(cfg, authHandler, healthHandler, logger)
 
 	// Create server
 	server := &http.Server{
@@ -143,32 +149,43 @@ func initDatabase(cfg *config.Config) (*pgxpool.Pool, error) {
 }
 
 // setupRouter configures the HTTP router with all routes and middleware
-func setupRouter(authHandler *handlers.AuthHandler, healthHandler *handlers.HealthHandler) *gin.Engine {
+func setupRouter(cfg *config.Config, authHandler *handlers.AuthHandler, healthHandler *handlers.HealthHandler, logger interface{}) *gin.Engine {
 	router := gin.New()
 
-	// Global middleware
-	router.Use(gin.Logger())
+	// Recovery middleware (must be first)
 	router.Use(gin.Recovery())
 
-	// CORS middleware (basic implementation)
-	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+	// Structured logging middleware
+	router.Use(middleware.Logger(logger.(*logrus.Logger)))
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
+	// Prometheus metrics middleware
+	router.Use(middleware.Metrics())
 
-		c.Next()
-	})
+	// CORS middleware
+	var corsConfig *middleware.CORSConfig
+	if cfg.Environment == "production" {
+		// In production, specify allowed origins
+		corsConfig = middleware.ProductionCORSConfig([]string{
+			"https://yourdomain.com",
+			"https://app.yourdomain.com",
+		})
+	} else {
+		// Development: allow all origins
+		corsConfig = middleware.DefaultCORSConfig()
+	}
+	router.Use(middleware.CORS(corsConfig))
 
-	// Health check routes (no auth required)
+	// Rate limiting middleware (10 requests per minute per IP)
+	rateLimiter := middleware.NewRateLimiter(10, time.Minute)
+	router.Use(rateLimiter.Limit())
+
+	// Health check routes (no auth required, no rate limiting)
 	router.GET("/health", healthHandler.Health)
 	router.GET("/ready", healthHandler.Ready)
 	router.GET("/live", healthHandler.Live)
+
+	// Prometheus metrics endpoint
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
