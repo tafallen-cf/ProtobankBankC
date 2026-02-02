@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: protobank
+
+resources:
+  - serviceaccount.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - hpa.yaml
+  - ingress.yaml
+
+commonLabels:
+  app: auth-service
+  managed-by: kustomize
+
+images:
+  - name: protobankbankc/auth-service
+    newTag: 1.0.0

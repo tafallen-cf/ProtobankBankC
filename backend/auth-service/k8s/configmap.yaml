@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: protobank
+  labels:
+    app: auth-service
+data:
+  db_host: "postgres.protobank.svc.cluster.local"
+  db_port: "5432"
+  db_name: "protobank_auth"
