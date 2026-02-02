@@ -18,6 +18,7 @@ type User struct {
 	AddressLine1    string     `json:"address_line1" db:"address_line1"`
 	AddressLine2    string     `json:"address_line2" db:"address_line2"`
 	City            string     `json:"city" db:"city"`
+	Region          string     `json:"region" db:"region"`
 	Postcode        string     `json:"postcode" db:"postcode"`
 	Country         string     `json:"country" db:"country"`
 	KYCStatus       string     `json:"kyc_status" db:"kyc_status"`
@@ -38,6 +39,7 @@ type RegisterRequest struct {
 	AddressLine1    string    `json:"address_line1" binding:"required"`
 	AddressLine2    string    `json:"address_line2"`
 	City            string    `json:"city" binding:"required"`
+	Region          string    `json:"region"`
 	Postcode        string    `json:"postcode" binding:"required"`
 	Country         string    `json:"country" binding:"required"`
 }

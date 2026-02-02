@@ -94,6 +94,15 @@ func NewNotFound(message string) *AppError {
 	}
 }
 
+// NewForbidden creates a 403 Forbidden error
+func NewForbidden(message string) *AppError {
+	return &AppError{
+		Err:        ErrUserInactive,
+		Message:    message,
+		StatusCode: http.StatusForbidden,
+	}
+}
+
 // NewConflict creates a 409 Conflict error
 func NewConflict(message string) *AppError {
 	return &AppError{

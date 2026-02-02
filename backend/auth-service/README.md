@@ -31,10 +31,17 @@ Authentication and authorization microservice built with **Test-Driven Developme
   - ✅ Query by email/phone
   - ✅ KYC status updates
   - ✅ PostgreSQL integration
+- [x] **Auth service business logic** (`internal/services/auth_service.go`)
+  - ✅ User registration with validation
+  - ✅ Login with credential verification
+  - ✅ Refresh token logic
+  - ✅ Access token validation
+  - ✅ Email & password validation
+  - ✅ Age verification (18+)
+  - ✅ Common password blocking
+  - ✅ Comprehensive test suite (50+ tests)
 
 ### In Progress 🚧
-
-- [ ] Auth service (business logic)
 - [ ] HTTP handlers (API layer)
 - [ ] Integration tests with testcontainers
 - [ ] Rate limiting middleware
@@ -69,14 +76,15 @@ auth-service/
 │   ├── models/
 │   │   └── user.go              # ✅ User models and DTOs
 │   ├── repository/
-│   │   └── user_repository.go   # 🚧 Database access layer
+│   │   └── user_repository.go   # ✅ Database access layer
 │   ├── services/
-│   │   └── auth_service.go      # 🚧 Business logic
+│   │   ├── auth_service.go      # ✅ Business logic
+│   │   └── auth_service_test.go # ✅ 50+ tests
 │   └── utils/
 │       ├── password.go          # ✅ Password hashing/validation (TDD)
 │       ├── password_test.go     # ✅ 15+ tests, 100% coverage
-│       ├── jwt.go               # 🚧 JWT token utilities
-│       └── jwt_test.go          # 🚧 JWT tests
+│       ├── jwt.go               # ✅ JWT token utilities
+│       └── jwt_test.go          # ✅ 35+ tests
 ├── tests/
 │   ├── integration/
 │   │   └── auth_test.go         # 🚧 Integration tests
