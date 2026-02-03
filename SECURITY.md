@@ -1,60 +1,38 @@
 # Security Policy
 
-## Enabling GitHub Code Scanning
+## GitHub Code Scanning Status
 
-### For Private Repositories
+### ✅ **Repository is Public - Full Code Scanning Enabled**
 
-GitHub Code Scanning with CodeQL requires **GitHub Advanced Security**, which is available:
+This repository is **public** and has **full GitHub code scanning** enabled for free, including:
 
-1. **GitHub Enterprise Cloud** with Advanced Security
-2. **GitHub Enterprise Server** 3.0+
-3. **Public repositories** (free)
+- ✅ **CodeQL** - Advanced semantic code analysis
+- ✅ **Secret scanning** - Automatic credential detection
+- ✅ **Dependency graph** - Dependency visualization
+- ✅ **Dependabot alerts** - Vulnerability notifications
+- ✅ **Security advisories** - CVE tracking
 
-#### Option 1: Enable Advanced Security (Enterprise/Paid Plans)
-
-If you have GitHub Advanced Security available:
-
-1. Go to repository **Settings** → **Code security and analysis**
-2. Click **Enable** for:
-   - **Dependency graph**
-   - **Dependabot alerts**
-   - **Dependabot security updates**
-   - **Code scanning** (requires Advanced Security)
-   - **Secret scanning** (requires Advanced Security)
-
-3. The CodeQL workflow (`.github/workflows/codeql.yml`) will automatically start running
-
-#### Option 2: Make Repository Public
-
-If you want free code scanning:
-
-```bash
-gh repo edit tafallen-cf/ProtobankBankC --visibility public
-```
-
-**⚠️ Warning**: This makes all code publicly visible. Only do this for open-source projects.
-
-#### Option 3: Use Local Security Scanning
-
-We provide a comprehensive local security scanning script that works without GitHub Advanced Security:
-
-```bash
-cd backend/auth-service
-../../scripts/security-scan.sh
-```
-
-This script runs:
-- ✅ **gosec** - Security vulnerability scanner
-- ✅ **govulncheck** - Known vulnerability checker
-- ✅ **staticcheck** - Code quality analyzer
-- ✅ **Secret detection** - Hardcoded credentials finder
-- ✅ **Dependency auditing** - Outdated package checker
+The CodeQL workflow (`.github/workflows/codeql.yml`) runs automatically:
+- On every push to `main` branch
+- On all pull requests
+- Weekly on Monday at 6:00 AM UTC
 
 ### Current Security Scanning Setup
 
-Even without GitHub Advanced Security enabled, our repository includes:
+#### ✅ **Advanced Code Scanning** (Enabled)
 
-#### ✅ **CI/CD Security Scans** (Already Working)
+1. **CodeQL** - Semantic code analysis
+   - Deep semantic analysis of code
+   - Security and quality queries
+   - Detects complex vulnerabilities
+   - Results in GitHub Security tab
+
+2. **Secret scanning** - Credential protection
+   - Automatically detects exposed secrets
+   - Blocks commits with credentials
+   - Alerts on token exposure
+
+#### ✅ **CI/CD Security Scans** (Active)
 
 These run on every push/PR automatically:
 
@@ -82,11 +60,21 @@ These run on every push/PR automatically:
    - Weekly dependency checks
    - Pull requests for outdated packages
 
-#### 🔄 **To Be Enabled** (Requires Advanced Security)
+#### ✅ **Local Security Scanning** (Optional)
 
-- **CodeQL** - Advanced semantic analysis
-- **Secret scanning** - Automatic credential detection
-- **Code scanning alerts** - GitHub Security tab integration
+We also provide a comprehensive local security scanning script:
+
+```bash
+cd backend/auth-service
+../../scripts/security-scan.sh
+```
+
+This script runs:
+- ✅ **gosec** - Security vulnerability scanner
+- ✅ **govulncheck** - Known vulnerability checker
+- ✅ **staticcheck** - Code quality analyzer
+- ✅ **Secret detection** - Hardcoded credentials finder
+- ✅ **Dependency auditing** - Outdated package checker
 
 ## Security Scanning Workflow
 
@@ -284,5 +272,5 @@ This project aims to comply with:
 
 ---
 
-**Last Updated**: February 2, 2026
-**Next Review**: March 2, 2026
+**Last Updated**: February 3, 2026
+**Next Review**: March 3, 2026
